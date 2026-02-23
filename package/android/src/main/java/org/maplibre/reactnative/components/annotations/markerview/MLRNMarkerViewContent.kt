@@ -22,23 +22,30 @@ class MLRNMarkerViewContent(
     }
 
     /**
-     * Prevent the parent MapView (and any ancestor gesture-based containers) from
-     * intercepting touch events once a touch starts inside this marker content.
+     * Consume ALL touch events that land inside this marker content view.
      *
-     * Without this, the MapView's gesture detector can steal ACTION_MOVE events
-     * for map panning before React Native's JS-side Pressable components have a
-     * chance to claim the responder role (the JS evaluation is asynchronous via
-     * Fabric/JSI). The result is ACTION_CANCEL being sent to children, causing
-     * `onPress` to never fire on Pressable buttons inside the marker.
+     * React Native Fabric processes touches asynchronously: native ACTION_DOWN
+     * arrives, gets forwarded to JS via Fabric/JSI, JS runs responder negotiation
+     * (onStartShouldSetResponder etc.), and only THEN does JS claim the touch.
+     * During this async gap, ReactViewGroup.dispatchTouchEvent returns false
+     * (no child consumed the event synchronously). Android interprets this as
+     * "child not interested" and gives the entire gesture to the parent MapView,
+     * which processes it as a map tap/pan — causing taps to pass through the card.
      *
-     * This is the standard Android pattern for nested interactive views inside
-     * scrollable/gesture-based containers (analogous to a Button inside ScrollView).
+     * Fix: Always return true from dispatchTouchEvent.
+     * - super.dispatchTouchEvent(ev) forwards the event into React Native's
+     *   Fabric touch pipeline (which will async-dispatch to JS Pressables).
+     * - Returning true tells Android this view consumed the event, preventing
+     *   MapView.onTouchEvent from processing it.
+     * - requestDisallowInterceptTouchEvent prevents MapView from intercepting
+     *   subsequent MOVE/UP events in the gesture sequence.
      */
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
             parent?.requestDisallowInterceptTouchEvent(true)
         }
-        return super.dispatchTouchEvent(ev)
+        super.dispatchTouchEvent(ev)
+        return true
     }
 
     private fun configureParentClipping() {
