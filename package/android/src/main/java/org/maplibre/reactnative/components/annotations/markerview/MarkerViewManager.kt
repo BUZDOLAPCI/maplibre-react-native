@@ -69,6 +69,14 @@ class MarkerViewManager(
         val view = marker.view
         val screenPos: PointF = map.projection.toScreenLocation(marker.latLng)
         val (viewWidth, viewHeight) = view.getContentSize()
+
+        if (viewWidth > 0f && viewHeight > 0f) {
+            if (view.width != viewWidth.toInt() || view.height != viewHeight.toInt()) {
+                view.setRight(viewWidth.toInt())
+                view.setBottom(viewHeight.toInt())
+            }
+        }
+
         val anchorOffsetX = viewWidth * marker.anchorX
         val anchorOffsetY = viewHeight * marker.anchorY
         view.x = screenPos.x - anchorOffsetX + marker.offsetX
