@@ -70,6 +70,9 @@ class MarkerViewManager(
         val screenPos: PointF = map.projection.toScreenLocation(marker.latLng)
         val (viewWidth, viewHeight) = view.getContentSize()
 
+        // Propagate content dimensions to the wrapper so Android routes touch
+        // events to this view. Without this, the framework skips zero-sized views
+        // in touch dispatch, making Marker children (buttons, cards) untappable.
         if (viewWidth > 0f && viewHeight > 0f) {
             if (view.width != viewWidth.toInt() || view.height != viewHeight.toInt()) {
                 view.setRight(viewWidth.toInt())
