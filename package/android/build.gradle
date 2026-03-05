@@ -79,6 +79,7 @@ android {
 }
 
 repositories {
+    mavenLocal()    // Custom MapLibre Native AAR with procedural window shaders
     mavenCentral()
     google()
 }
