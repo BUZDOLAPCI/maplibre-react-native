@@ -23,7 +23,7 @@ export const getAndroidVersion = async () => {
   if (!cachedAndroidVersion) {
     cachedAndroidVersion = await getNativeVersion(
       ["android", "gradle.properties"],
-      /^org\.maplibre\.reactnative\.nativeVersion=(\d+\.\d+\.\d+)$/,
+      /^org\.maplibre\.reactnative\.nativeVersion=(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/,
     );
   }
 
@@ -45,9 +45,12 @@ export function isVersionGTE(
   version: string,
   otherVersion: string | undefined,
 ) {
+  const numericVersion = version.match(/^(\d+\.\d+\.\d+)/)?.[1];
+
   return (
+    !!numericVersion &&
     !!otherVersion?.match(/^(\d+\.\d+\.\d+)$/) &&
-    version.localeCompare(otherVersion, undefined, {
+    numericVersion.localeCompare(otherVersion, undefined, {
       numeric: true,
       sensitivity: "base",
     }) >= 0
